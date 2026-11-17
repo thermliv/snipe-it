@@ -77,6 +77,18 @@ Route::group(['prefix' => 'licenses', 'middleware' => ['auth']], function () {
             ->push(trans('general.checkout'), route('licenses.fulfill-requests.create', $license))
         );
 
+    Route::get('{license}/seat-audits', [Licenses\LicenseSeatAuditsController::class, 'index'])
+        ->where('license', '[0-9]+')
+        ->name('licenses.seat-audits.index')
+        ->breadcrumbs(fn (Trail $trail, License $license) => $trail
+            ->parent('licenses.show', $license)
+            ->push(trans('admin/licenses/general.seat_audit.title'), route('licenses.seat-audits.index', $license))
+        );
+
+    Route::post('{license}/seats/{licenseSeat}/seat-audits', [Licenses\LicenseSeatAuditsController::class, 'store'])
+        ->where(['license' => '[0-9]+', 'licenseSeat' => '[0-9]+'])
+        ->name('licenses.seat-audits.store');
+
     Route::post('{license}/fulfill-requests',
         [Licenses\LicenseCheckoutController::class, 'bulkFulfillStore']
     )->where('license', '[0-9]+')

@@ -114,6 +114,12 @@
                         <x-button.edit :item="$license" :route="route('licenses.edit', $license->id)"/>
                         <x-button.clone :item="$license" :route="route('clone/license', $license->id)"/>
                         <x-button.checkout permission="checkout" :item="$license" :route="route('licenses.checkout', $license->id)" />
+                        @can('update', $license)
+                            <a href="{{ route('licenses.seat-audits.index', $license) }}" class="btn btn-primary btn-sm hidden-print">
+                                <x-icon type="audit" class="fa-fw"/>
+                                {{ trans('admin/licenses/general.seat_audit.button') }}
+                            </a>
+                        @endcan
 
                         @can('checkout', $license)
 
