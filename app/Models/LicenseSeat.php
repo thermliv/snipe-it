@@ -12,6 +12,7 @@ use App\Presenters\LicenseSeatPresenter;
 use App\Presenters\Presentable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -156,6 +157,11 @@ class LicenseSeat extends SnipeModel implements CompanyableChild
     public function asset()
     {
         return $this->belongsTo(Asset::class, 'asset_id')->withTrashed();
+    }
+
+    public function audits(): HasMany
+    {
+        return $this->hasMany(LicenseSeatAudit::class);
     }
 
     /**
