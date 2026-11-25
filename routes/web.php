@@ -740,6 +740,11 @@ Route::group(['prefix' => 'reports', 'middleware' => ['auth']], function () {
             ->push(trans('general.reports'), route('reports.index'))
             ->push(trans('admin/licenses/general.pool_audit.report'), route('reports.license-audit')));
 
+    Route::get('license-audit/export/{type}', [ReportsController::class, 'exportLicenseAudits'])
+        ->where('type', 'pool|seat')
+        ->name('reports.license-audit.export')
+        ->breadcrumbs(fn (Trail $trail) => $trail->parent('reports.license-audit'));
+
     Route::get(
         'depreciation', [ReportsController::class, 'getDeprecationReport'])
         ->name('reports/depreciation')
