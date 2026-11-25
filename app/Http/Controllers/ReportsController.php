@@ -13,6 +13,8 @@ use App\Models\Company;
 use App\Models\CustomField;
 use App\Models\Depreciation;
 use App\Models\License;
+use App\Models\LicensePoolAudit;
+use App\Models\LicenseSeatAudit;
 use App\Models\Maintenance;
 use App\Models\ReportTemplate;
 use App\Models\Setting;
@@ -240,6 +242,25 @@ class ReportsController extends Controller
         $this->authorize('reports.view');
 
         return view('reports/audit');
+    }
+
+    public function licenseAudits(): View
+    {
+        $this->authorize('reports.view');
+
+        $poolAudits = LicensePoolAudit::whereHas('license')
+            ->with(['license', 'auditor'])
+            ->latest('id')
+            ->paginate(50, ['*'], 'pool_page')
+            ->withQueryString();
+
+        $seatAudits = LicenseSeatAudit::whereHas('license')
+            ->with(['license', 'auditor'])
+            ->latest('id')
+            ->paginate(50, ['*'], 'seat_page')
+            ->withQueryString();
+
+        return view('reports/license-audit', compact('poolAudits', 'seatAudits'));
     }
 
     /**

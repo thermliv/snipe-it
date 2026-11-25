@@ -12,6 +12,50 @@
                 {{ trans('admin/licenses/general.seat_audit.title') }}: {{ $license->name }}
             </h1>
 
+            <div class="box box-default">
+                <div class="box-header with-border">
+                    <h2 class="box-title">{{ trans('admin/licenses/general.pool_audit.title') }}</h2>
+                </div>
+                <div class="box-body">
+                    <p>{{ trans('admin/licenses/general.pool_audit.help') }}</p>
+                    <p>{{ trans('admin/licenses/general.pool_audit.recorded_seats') }}: <strong>{{ $license->seats }}</strong></p>
+                    @if ($latestPoolAudit)
+                        <p>
+                            @if ($latestPoolAudit->pool_audit_revision !== $license->pool_audit_revision)
+                                {{ trans('admin/licenses/general.pool_audit.stale') }}
+                            @elseif ((int) $latestPoolAudit->verified_seats !== (int) $latestPoolAudit->recorded_seats)
+                                {{ trans('admin/licenses/general.pool_audit.discrepancy') }}
+                            @else
+                                {{ trans('admin/licenses/general.pool_audit.verified') }}
+                            @endif
+                            ({{ $latestPoolAudit->created_at->format('Y-m-d H:i') }},
+                            {{ $latestPoolAudit->auditor?->display_name ?? trans('admin/reports/general.deleted_user') }};
+                            {{ trans('admin/licenses/general.pool_audit.verified_seats') }}: {{ $latestPoolAudit->verified_seats }})
+                        </p>
+                    @else
+                        <p>{{ trans('admin/licenses/general.pool_audit.not_audited') }}</p>
+                    @endif
+                    @foreach (['pool_audit_revision', 'verified_seats', 'notes'] as $field)
+                        @foreach ($errors->get($field) as $message)
+                            <p class="text-danger" role="alert">{{ $message }}</p>
+                        @endforeach
+                    @endforeach
+                    <form method="post" action="{{ route('licenses.pool-audits.store', $license) }}" class="form-inline">
+                        @csrf
+                        <input type="hidden" name="pool_audit_revision" value="{{ $license->pool_audit_revision }}">
+                        <div class="form-group">
+                            <label for="verified-seats">{{ trans('admin/licenses/general.pool_audit.verified_seats') }}</label>
+                            <input id="verified-seats" type="number" name="verified_seats" class="form-control" min="0" max="2147483647" value="{{ old('verified_seats', $license->seats) }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="pool-audit-notes">{{ trans('admin/licenses/general.seat_audit.notes') }}</label>
+                            <textarea id="pool-audit-notes" name="notes" class="form-control" rows="1" placeholder="{{ trans('admin/licenses/general.seat_audit.notes') }}">{{ old('notes') }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">{{ trans('admin/licenses/general.seat_audit.record') }}</button>
+                    </form>
+                </div>
+            </div>
+
             @if ($seats->isEmpty())
                 <p>{{ trans('admin/licenses/general.seat_audit.empty') }}</p>
             @else

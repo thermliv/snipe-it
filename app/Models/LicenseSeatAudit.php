@@ -24,7 +24,7 @@ class LicenseSeatAudit extends SnipeModel
 
     public function license(): BelongsTo
     {
-        return $this->belongsTo(License::class);
+        return $this->belongsTo(License::class)->withTrashed();
     }
 
     public function licenseSeat(): BelongsTo
