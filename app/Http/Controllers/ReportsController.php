@@ -20,6 +20,7 @@ use App\Models\ReportTemplate;
 use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -248,19 +249,88 @@ class ReportsController extends Controller
     {
         $this->authorize('reports.view');
 
-        $poolAudits = LicensePoolAudit::whereHas('license')
-            ->with(['license', 'auditor'])
+        $poolAudits = $this->licenseAuditQuery('pool')
             ->latest('id')
             ->paginate(50, ['*'], 'pool_page')
             ->withQueryString();
 
-        $seatAudits = LicenseSeatAudit::whereHas('license')
-            ->with(['license', 'auditor'])
+        $seatAudits = $this->licenseAuditQuery('seat')
             ->latest('id')
             ->paginate(50, ['*'], 'seat_page')
             ->withQueryString();
 
         return view('reports/license-audit', compact('poolAudits', 'seatAudits'));
+    }
+
+    public function exportLicenseAudits(string $type): StreamedResponse
+    {
+        $this->authorize('reports.view');
+        abort_unless(in_array($type, ['pool', 'seat'], true), 404);
+
+        return new StreamedResponse(function () use ($type): void {
+            $handle = fopen('php://output', 'w');
+            $formatter = new EscapeFormula('`');
+
+            $header = $type === 'pool'
+                ? [
+                    trans('general.date'),
+                    trans('general.license'),
+                    trans('general.audited_by'),
+                    trans('admin/licenses/general.pool_audit.recorded_seats'),
+                    trans('admin/licenses/general.pool_audit.verified_seats'),
+                    trans('general.notes'),
+                ]
+                : [
+                    trans('general.date'),
+                    trans('general.license'),
+                    trans('admin/licenses/general.seat'),
+                    trans('admin/licenses/general.user'),
+                    trans('general.audited_by'),
+                    trans('admin/licenses/general.seat_audit.active_use'),
+                    trans('admin/licenses/general.seat_audit.user_confirmed'),
+                    trans('general.notes'),
+                ];
+            fputcsv($handle, $formatter->escapeRecord($header), escape: '\\', eol: "\r\n");
+
+            $this->licenseAuditQuery($type)->chunkByIdDesc(500, function ($audits) use ($type, $handle, $formatter): void {
+                foreach ($audits as $audit) {
+                    $auditor = $audit->auditor?->display_name ?? trans('admin/reports/general.deleted_user');
+                    $row = $type === 'pool'
+                        ? [
+                            $audit->created_at->format('Y-m-d H:i'),
+                            $audit->license->name,
+                            $auditor,
+                            $audit->recorded_seats,
+                            $audit->verified_seats,
+                            $audit->notes,
+                        ]
+                        : [
+                            $audit->created_at->format('Y-m-d H:i'),
+                            $audit->license->name,
+                            $audit->license_seat_id,
+                            $audit->assigned_to_name ?? trans('admin/reports/general.deleted_user'),
+                            $auditor,
+                            $audit->in_use ? trans('general.yes') : trans('general.no'),
+                            $audit->user_confirmed ? trans('general.yes') : trans('general.no'),
+                            $audit->notes,
+                        ];
+
+                    fputcsv($handle, config('app.escape_formulas') === false ? $row : $formatter->escapeRecord($row), escape: '\\', eol: "\r\n");
+                }
+            });
+
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="license-'.$type.'-audit-report-'.date('Y-m-d-his').'.csv"',
+        ]);
+    }
+
+    private function licenseAuditQuery(string $type): Builder
+    {
+        return ($type === 'pool' ? LicensePoolAudit::query() : LicenseSeatAudit::query())
+            ->whereHas('license')
+            ->with(['license', 'auditor']);
     }
 
     /**

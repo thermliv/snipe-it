@@ -30,6 +30,7 @@ return [
         'pool_history' => 'Pool audit history',
         'no_audits' => 'No audits found.',
         'help' => 'Enter the total number of licensed seats you verified. Auditing does not change the recorded seat count.',
+        'export_page_help' => 'The export menu downloads the current page. Use Export all to CSV for the complete history.',
     ],
     'seat_audit' => [
         'title' => 'License audits',
