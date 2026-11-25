@@ -734,6 +734,12 @@ Route::group(['prefix' => 'reports', 'middleware' => ['auth']], function () {
             ->push(trans('general.reports'), route('reports.index'))
             ->push(trans('general.audit_report'), route('reports.audit')));
 
+    Route::get('license-audit', [ReportsController::class, 'licenseAudits'])
+        ->name('reports.license-audit')
+        ->breadcrumbs(fn (Trail $trail) => $trail->parent('home')
+            ->push(trans('general.reports'), route('reports.index'))
+            ->push(trans('admin/licenses/general.pool_audit.report'), route('reports.license-audit')));
+
     Route::get(
         'depreciation', [ReportsController::class, 'getDeprecationReport'])
         ->name('reports/depreciation')

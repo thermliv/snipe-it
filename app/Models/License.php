@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Watson\Validating\ValidatingTrait;
 
 /**
@@ -340,7 +341,15 @@ class License extends Depreciable implements Importable
                 */
                 $oldSeatCount = $license->license_seats_count;
 
-                return static::adjustSeatCount($license, $oldSeatCount, $newSeatCount);
+                if (! static::adjustSeatCount($license, $oldSeatCount, $newSeatCount)) {
+                    return false;
+                }
+
+                if ($license->isDirty('seats') || (int) $oldSeatCount !== (int) $newSeatCount) {
+                    $license->pool_audit_revision = (string) Str::uuid();
+                }
+
+                return true;
             }
         );
     }
@@ -1004,6 +1013,11 @@ class License extends Depreciable implements Importable
     public function seatAudits(): HasMany
     {
         return $this->hasMany(LicenseSeatAudit::class);
+    }
+
+    public function poolAudits(): HasMany
+    {
+        return $this->hasMany(LicensePoolAudit::class);
     }
 
     /**

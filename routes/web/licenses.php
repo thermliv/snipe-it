@@ -89,6 +89,10 @@ Route::group(['prefix' => 'licenses', 'middleware' => ['auth']], function () {
         ->where(['license' => '[0-9]+', 'licenseSeat' => '[0-9]+'])
         ->name('licenses.seat-audits.store');
 
+    Route::post('{license}/pool-audits', [Licenses\LicenseSeatAuditsController::class, 'storePool'])
+        ->where('license', '[0-9]+')
+        ->name('licenses.pool-audits.store');
+
     Route::post('{license}/fulfill-requests',
         [Licenses\LicenseCheckoutController::class, 'bulkFulfillStore']
     )->where('license', '[0-9]+')

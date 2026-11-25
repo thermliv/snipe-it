@@ -820,6 +820,11 @@
                                         <a href="{{ route('reports.audit') }}">
                                             {{ trans('general.audit_report') }}</a>
                                     </li>
+                                    <li {!! (request()->routeIs('reports.license-audit') ? ' class="active" aria-current="page"' : '') !!}>
+                                        <a href="{{ route('reports.license-audit') }}">
+                                            {{ trans('admin/licenses/general.pool_audit.report') }}
+                                        </a>
+                                    </li>
                                     <li {!! (request()->is('reports/depreciation') ? ' class="active" aria-current="page"' : '') !!}>
                                         <a href="{{ url('reports/depreciation') }}">
                                             {{ trans('general.depreciation_report') }}

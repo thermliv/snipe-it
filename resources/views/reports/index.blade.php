@@ -43,6 +43,12 @@
         </div>
 
         <div class="col-md-3 col-sm-6">
+            <a href="{{ route('reports.license-audit') }}" class="btn btn-theme btn-block" style="margin-bottom: 10px; white-space: normal; text-align: left; padding-left: 15px;">
+                <x-icon type="audit" class="fa-fw"/> {{ trans('admin/licenses/general.pool_audit.report') }}
+            </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
             <a href="{{ url('reports/depreciation') }}" class="btn btn-theme btn-block" style="margin-bottom: 10px; white-space: normal; text-align: left; padding-left: 15px;">
                 <x-icon type="depreciation" class="fa-fw"/> {{ trans('general.depreciation_report') }}
             </a>
